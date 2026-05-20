@@ -212,22 +212,26 @@ fn build_from_source(docs_rs: &Path) {
     }
 
     let mut config = Config::new(&aeron_path);
+    // Use clang so that -flto produces LLVM bitcode (compatible with rust-lld)
+    // rather than GCC LTO bitcode (which only GNU ld can link).
+    config.define("CMAKE_C_COMPILER", "clang");
+    config.define("CMAKE_CXX_COMPILER", "clang++");
     if std::env::var("PROFILE").unwrap() == "release" {
         config.profile("Release");
         config.define(
             "CMAKE_CXX_FLAGS_RELEASE",
             if publish_binaries {
-                "-O3 -DNDEBUG -march=native -funroll-loops"
+                "-O3 -DNDEBUG -funroll-loops"
             } else {
-                "-O3 -DNDEBUG -march=native -funroll-loops -flto"
+                "-O3 -DNDEBUG -funroll-loops -flto"
             },
         );
         config.define(
             "CMAKE_C_FLAGS_RELEASE",
             if publish_binaries {
-                "-O3 -DNDEBUG -march=native -funroll-loops"
+                "-O3 -DNDEBUG -funroll-loops"
             } else {
-                "-O3 -DNDEBUG -march=native -funroll-loops -flto"
+                "-O3 -DNDEBUG -funroll-loops -flto"
             },
         );
     } else {
